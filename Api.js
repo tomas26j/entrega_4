@@ -55,36 +55,3 @@ class Api{
 }
 
 module.exports = Api;
-
-
-
-
-
-/*
-addProduct(_body, _pathId){        
-        const clonedBody = _body;
-        const clonedContainer = Array.from(this.container);
-
-        // Mapeo para buscar el ID mas alto del Array
-        const containerIDs = this.container.map((obj) => {return obj.id}); 
-
-        // Si el post/put se hace sin un ID en el URL se cambia automaticamente al Ultimo ID
-        clonedBody.id = Math.max(...containerIDs) + 1;
-        
-        
-        // Se ejecuta cuando el post/put se realiza con un ID en la URL
-        if(_pathId){ 
-            if(_body.id != _pathId) return false;  //retorna falso porque no coinciden el ID del objeto con el URL
-            
-            let filtered = this.container.filter((obj) => obj.id == _body.id); // Chequea si ya existe ese numero
- 
-            console.log(this.container);
-            if(filtered.length) this.container = this.deleteById(_pathId);
-            console.log(this.container);
-            this.container.push(_body); 
-            
-            return true;                
-        }
-        else this.container.push(clonedBody); return true;
-    }
-*/
