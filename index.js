@@ -1,102 +1,82 @@
-const PATH = "./productos.txt";
-const PORT = 8080;
-
 const { Router } = require("express");
-var express = require("express");
-var app = express();
+const express = require("express");
+const Api = require("./Api");
 
-
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json())
-//app.use(express.static('/public'));
-
-
-app.use('/', express.static('public'));
-
+const PORT = 8080;
+const app = express();
 const APIRouter = Router();
 
 let products = [ 
     {
-    "title": "Calculadora",
-    "price": 234.56,
-    "thumbnail": "https://cdn3.iconfinder.com/data/icons/education-209/64/calculator-math-tool-school-256.png",
-    "id": 1
+        "title": "Calculadora",
+        "price": 234.56,
+        "thumbnail": "https://cdn3.iconfinder.com/data/icons/education-209/64/calculator-math-tool-school-256.png",
+        "id": 1
     },
     {
-    "title": "Globo Terráqueo",
-    "price": 345.67,
-    "thumbnail": "https://cdn3.iconfinder.com/data/icons/education-209/64/calculator-math-tool-school-256.png",
-    "id": 2
+        "title": "Globo Terráqueo",
+        "price": 345.67,
+        "thumbnail": "https://cdn3.iconfinder.com/data/icons/education-209/64/calculator-math-tool-school-256.png",
+        "id": 2
     },
     {
-    "title": "Microscopio",
-    "price": 456.78,
-    "thumbnail": "https://cdn3.iconfinder.com/data/icons/education-209/64/calculator-math-tool-school-256.png",
-    "id": 3
+        "title": "Microscopio",
+        "price": 456.78,
+        "thumbnail": "https://cdn3.iconfinder.com/data/icons/education-209/64/calculator-math-tool-school-256.png",
+        "id": 3
     }
 ];    
+const API = new Api(products);
 
 
-app.get('/', (req, res) => {
-    //res.render('index.html');
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json())
+app.use('/', express.static('public'));
+
+
+APIRouter.get('/', (req, res) => res.send(API.container));
+
+
+APIRouter.get('/productos', (req, res) =>{
+    res.send(API.container);
 })
 
-
-
-APIRouter.get('/productos', (req, res) => res.send(products));
-
-
-
+// --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- //
 APIRouter.get('/productos/:id', (req, res) =>{
-    let product = products.filter((obj) => obj.id == req.params.id);
-    
-    if(!product.length)res.send('NONE OBJECT');
-    else res.send(product);
+    let product = API.getById(req.params.id);
+
+    if(!product) res.status(400).send(`There is not object with id: ${req.params.id}`);
+    else res.status(200).send(product);
 })
 
 
 APIRouter.post('/productos', (req, res) =>{
-    const filteredProducts = products.filter((obj) =>  obj.id == req.body.id)
     
-    if(!req.body.length) console.log('EL BODY ESTA VACIO');
-    if(filteredProducts.length) res.send(`A product with ${req.params.id} ID, already exist`);
-    else{
-        products.push(req.body);
-        res.status(200).json({ added: req.body});  
-    }
+    if(API.addProduct(req.body)) res.status(200).json({ added: req.body }); 
+
+    else res.status(400).send('Ya existe un objeto con ese ID');
 })
 
 
 APIRouter.put('/productos/:id', (req, res) =>{
-    const filteredProducts = products.filter((obj) => obj.id == req.params.id)
-    
-    if(req.params.id != req.body.id)
-    res.status(300).send(`The product ID (${req.body.id}) doesn't match path ID (${req.params.id})`);
-
-    else if(filteredProducts.length) res.send(`A product with ${req.params.id} ID, already exist`);
-    else{
-        products.push(req.body);
-        res.status(200).json({ added: req.body });  
+    if(API.addProduct(req.body, req.params.id)){
+        res.status(200).json({ lastModfication: req.body });
     }
+    else res.status(300).send('ID del producto no coincide con el URL');
 })
 
-
-
-//FUNCIONA - - - CAMBIAR: intentar incorporar logica para actualizar los id o busca otra manera de implementarlos.
 
 APIRouter.delete('/productos/:id', (req, res) =>{
-    const filteredProducts = products.filter((parsedData) => parsedData.id == req.params.id)
-    
-    if(!filteredProducts.length) res.status(400).send('That Product doesnt exist');
-    else{
-        products = products.filter( (obj) => obj.id != req.params.id);
-        res.status(200).json({ newlist: products});  
+    const id = req.params.id;
+    if(API.deleteById(id)){
+        res.status(200).json(`deleted product with ID ${id}`);
     }
+    else res.status(300).send(`That product doesn't exist`);
 })
 
 
-app.use('/API',APIRouter);
-
+// --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- //
+app.use('/API', APIRouter);
 app.listen(PORT, () => {
     console.log(`Escuchando en el puerto ${PORT}`);
 })
